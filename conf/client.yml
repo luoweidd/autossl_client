@@ -1,0 +1,18 @@
+#------------------------------------------------------------------------------------#
+#                                  aouot client                                      #
+#------------------------------------------------------------------------------------#
+
+
+#client lisent address or port
+lisent:
+  host: 127.0.0.1
+  port: 8782
+  maxconnect: 65500
+  buffer_size: 1024
+
+pid:
+  path:
+
+log:
+  path: logs/ssl_apply.log
+  level: DEBUG

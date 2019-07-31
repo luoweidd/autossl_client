@@ -13,6 +13,12 @@
  * Time: 下午5:23
 '''
 
+import atexit,sys,os,signal,time
+from sysbase.logproduction import Logbase
+from sysbase.confparser import configparser
+
+def serverrun():
+    pass
 
 if __name__ == "__namin__":
-    pass
+    serverrun()

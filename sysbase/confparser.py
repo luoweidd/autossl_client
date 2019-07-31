@@ -13,7 +13,20 @@
  * Time: 下午5:30
 '''
 
+from sysbase.basetools import systemtools
+import yaml
+
 class configparser:
 
     def __init__(self):
+        sys_tools = systemtools()
         self.config_path = "conf/client.yml"
+        self.configabsolutepath = sys_tools.dirflagformat(self.config_path)
+
+    def readconfig(self):
+        with open(self.configabsolutepath,'r')as f:
+            data = f.read()
+        return data
+
+    def confparser(self):
+        return yaml.safe_load(self.readconfig())
