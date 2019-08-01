@@ -47,7 +47,7 @@ def recv(client,host,port):
 
 def send(client,host,port):
     while True:
-        msg = input('请输入消息内容：\n')
+        msg = input('\n')
         if msg != None and msg != b'':
             try:
                 client.send(msg.encode('utf-8'))
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     client = clientconnect()
     t1=threading.Thread(target=send,args=client,)
     t2=threading.Thread(target=recv,args=client)
-    t3=threading.Thread(target=heartbeat,args=client)
+    # t3=threading.Thread(target=heartbeat,args=client)
     t2.start()
     t1.start()
-    t3.start()
+    # t3.start()

@@ -47,3 +47,6 @@
 #
 # test3()
 
+from tcpservice.socketservice import tcpserver
+server = tcpserver()
+server

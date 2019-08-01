@@ -59,8 +59,15 @@ class tcpserver:
                             self.log.info(message_queues)
                         # 否则为客户端发送的数据
                         else:
+                            try:
+                                socket_request.send(b'1')
+                            except OSError as e:
+                                self.log.error('客户端已下线！')
+                                epoll.unregister(con)
+                                fd_to_socket[con].close()
+                                del fd_to_socket[con]
                             data = socket_request.recv(1024)
-                            if data:
+                            if data and data != b'':
                                 message_queues[socket_request].put(data)
                                 # 修改读取到消息的连接到等待写事件集合
                                 epoll.modify(fd, select.EPOLLOUT)
@@ -68,11 +75,10 @@ class tcpserver:
                     elif event & select.EPOLLOUT:
                         try:
                             msg = message_queues[socket_request].get_nowait()
+                            socket_request.send(msg)
                             self.log.info(msg)
                         except queue.Empty as e:
                             epoll.modify(fd, select.EPOLLIN)
-                            socket_request.send(msg)
-                            self.log.error('队列中没有任务处理当前任务，直接返回发送数据 ——》%s'%(data.decode('utf-8')))
                     # 关闭事件
                     elif event & select.EPOLLHUP:
                         epoll.unregister(fd)
@@ -93,6 +99,3 @@ class tcpserver:
                             inputs.remove(socket_request)
                             socket_request.close()
 
-
-class handle:
-    pass
