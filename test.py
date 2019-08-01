@@ -33,18 +33,6 @@
 # sub = re.sub('^\./','',path)
 # print(sub)
 
-from sevice_lisent.server_listen import TCPlisten
-from sevice_lisent.messgroute import messagesroute,routlist
-server = TCPlisten()
-server.server_start()
-msg_server = messagesroute()
-@msg_server.addroute('root')
-def root():
-    print(routlist)
-    print('huanying')
-
-
-
 # def test(fun):
 #     if fun != None:
 #         def test2():
