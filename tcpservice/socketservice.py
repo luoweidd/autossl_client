@@ -16,6 +16,7 @@
 from sysbase.confparser import configparser
 from sysbase.logproduction import Logbase
 import socket,threading,os,select,queue
+from tcpservice.requesthandle import requesthandle
 
 class tcpserver:
 
@@ -32,6 +33,8 @@ class tcpserver:
         self.log = Logbase.logger
         self.log.info("Service startup!")
         self.service.listen(self.backlog)
+
+    def start(self):
         if hasattr(select,'epoll'):
             # 新建epoll事件对象，后续要监控的事件添加到其中
             epoll = select.epoll()
@@ -59,24 +62,23 @@ class tcpserver:
                             self.log.info(message_queues)
                         # 否则为客户端发送的数据
                         else:
-                            try:
-                                socket_request.send(b'1')
-                            except OSError as e:
-                                self.log.error('客户端已下线！')
+                            data = socket_request.recv(self.buffer_size)
+                            if data == '':
+                                self.log.error('消息空，强制关闭链接！')
                                 epoll.unregister(con)
-                                fd_to_socket[con].close()
-                                del fd_to_socket[con]
-                            data = socket_request.recv(1024)
-                            if data and data != b'':
+                                fd_to_socket[con.fileno()].close()
+                            else:
                                 message_queues[socket_request].put(data)
                                 # 修改读取到消息的连接到等待写事件集合
                                 epoll.modify(fd, select.EPOLLOUT)
                     # 可写事件
                     elif event & select.EPOLLOUT:
                         try:
-                            msg = message_queues[socket_request].get_nowait()
-                            socket_request.send(msg)
-                            self.log.info(msg)
+                            request = message_queues[socket_request].get_nowait()
+                            handle = requesthandle(request)
+                            result = handle.handle()
+                            socket_request.send(result.encode('utf-8'))
+                            self.log.info('返回 ——》%s'%result)
                         except queue.Empty as e:
                             epoll.modify(fd, select.EPOLLIN)
                     # 关闭事件
@@ -93,7 +95,7 @@ class tcpserver:
                         con, address = self.service.accept()
                         inputs.append(con)
                     else:
-                        data = socket_request.recv(1024)
+                        data = socket_request.recv(self.buffer_size)
                         if data:
                             socket_request.send(data)
                             inputs.remove(socket_request)

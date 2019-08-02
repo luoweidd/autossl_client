@@ -30,9 +30,9 @@ def clientconnect():
 def recv(client,host,port):
     while True:
         try:
-            data =  client.recv(1024)
+            data =  client.recv(10240)
             if data != b'':
-                print(data.decode('utf-8'))
+                print('\n接收到新消息：“%s”'%data.decode('utf-8'))
             else:
                 print('\n服务连接断开！')
                 client.close()
@@ -47,10 +47,10 @@ def recv(client,host,port):
 
 def send(client,host,port):
     while True:
-        msg = input('\n')
+        msg = input('请输入：')
         if msg != None and msg != b'':
             try:
-                client.send(msg.encode('utf-8'))
+                client.sendall(msg.encode('utf-8'))
             except OSError as ea:
                 client.close()
                 print('断线重连……')

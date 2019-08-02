@@ -8,7 +8,7 @@ lisent:
   host: 127.0.0.1
   port: 8782
   maxconnect: 65500
-  buffer_size: 1024
+  buffer_size: 7135
 
 pid:
   path:

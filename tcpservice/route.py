@@ -6,18 +6,9 @@
  * Description:  
  * Project : autossl_client
  * Ide tools : PyCharm
- * File name : runservice.py
+ * File name : route.py
  * Author <a href="mailto:3245554@qq.com">罗卫</a>
  * User: devops
- * Date: 2019/7/25
- * Time: 下午5:23
+ * Date: 2019/8/2
+ * Time: 下午6:13
 '''
-
-from tcpservice.socketservice import tcpserver
-
-
-server = tcpserver()
-
-
-if __name__ == "__namin__":
-    server
