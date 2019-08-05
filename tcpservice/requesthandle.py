@@ -15,9 +15,14 @@
 
 
 from sysbase.logproduction import Logbase
+from sysbase.basetools import systemtools
 import json
 
-class requesthandle(object):
+class Reques:
+
+    request = None
+
+class requesthandle():
 
     __doc__ = '''
         消息格式：
@@ -26,48 +31,44 @@ class requesthandle(object):
                 msg：我们最终奥传输的数据，可以是任意格式或数据类型，由使用者自己处理
               '''
 
-    _heard = {}
 
-
-
-    def __init__(self,data):
-        self.request = data
-        self.heard =None
-        self.msg = None
+    def __init__(self):
         self.log = Logbase.logger
+        self.sysbase = systemtools()
+    respons = {"ok": "处理成功"}
+    heards = {}
+    req_messga = None
+
+    def route(self,heard):
+        if heard not in self.heards:
+            def func(routefunc):
+                self.heards.update({heard:routefunc})
+            return func
+        else:
+            assert '"%s" Routing already exists! '
 
     def handle(self):
         try:
-            self.log.info(self.request)
-            data = json.loads(self.request)
-            if type(data) == dict:
+            self.log.info(Reques.request)
+            data = json.loads(Reques.request)
+            self.log.info(type(data))
+            if type(data) is dict:
                 heard = data["heard"]
-                messgae = data["msg"]
-                return self.controllerout(messgae,heard)
+                if heard not in self.heards:
+                    return "{'error','nofund'}"
+                else:
+                    resutl = self.heards[heard]()
+                    return resutl
             else:
                 return "{'error':'非法消息'}"
-        except Exception:
+        except Exception as e :
+            self.sysbase.logoutput(e)
             return "{'error':'非法消息'}"
 
 
-    def controllerout(self,data,route_flag):
-        '''
-
-        :param route_flag: type:<str>
-        :return:
-        '''
-        if hasattr(self._heard,route_flag):
-            return map(self._heard["route_flag"](data),route_flag)
-        return self.messgesformat({'error':'notfund'})
 
     def messgesformat(self,msg):
         return str(msg)
 
-    def route(self,contrllfunc,route):
-        self._heard.update(route,contrllfunc)
-        def func():
-            request = self.request
-            return contrllfunc(request)
-        return func
 
 

@@ -3,7 +3,9 @@
 #------------------------------------------------------------------------------------#
 
 
-#client lisent address or port
+#Client Basic Service Configuration:
+#Listen address, listen port, maximum number of links, maximum transfer buffer
+
 lisent:
   host: 127.0.0.1
   port: 8782
@@ -13,6 +15,27 @@ lisent:
 pid:
   path:
 
+#Logging module is a Python built-in logging module, the relevant configuration parameters refer to the
+#official logging configuration document.
+#Reference address: https://docs.python.org/3/library/logging.html
+#  backup_Count: max backup log file count
+#  max_cut: File Cutting Capacity.(Unit: MB)
+
 log:
-  path: logs/ssl_apply.log
-  level: DEBUG
+  PATH: logs/ssl_apply.log
+  LEVEL: DEBUG
+  backup_Count: 100
+  max_cut: 5
+  ASCTIME_FORMAT: "%Y-%m-%d %H:%M:%S"
+  FORMAT: "%(asctime)-15s [%(pathname)s.%(module)s.%(funcName)s] %(lineno)d %(levelname)s -- %(message)s"
+
+#The configuration path here must be absolute, otherwise the corresponding directory may not be found.
+#Multiple paths can be set, and the program will lookup the configuration file according to the conditions
+#under the corresponding paths. If not found, it will output corresponding prompts in the log, and will not
+#make any changes to the existing configuration. But the certificate file is written to the local certificate
+#directory.
+#  Nginxpath: nginx configuration directory
+#  Certificate catalogue: Certificate storage catalogue applied through this system
+nginx:
+  nginxpath: /etc/nginx/conf,/etc/nginx/sites-enabled
+  certificate_catalogue: /etc/nginx/certificate

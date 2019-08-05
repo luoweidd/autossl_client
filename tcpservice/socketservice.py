@@ -16,7 +16,7 @@
 from sysbase.confparser import configparser
 from sysbase.logproduction import Logbase
 import socket,threading,os,select,queue
-from tcpservice.requesthandle import requesthandle
+from tcpservice.requesthandle import requesthandle,Reques
 
 class tcpserver:
 
@@ -34,7 +34,6 @@ class tcpserver:
         self.log.info("Service startup!")
         self.service.listen(self.backlog)
 
-    def start(self):
         if hasattr(select,'epoll'):
             # 新建epoll事件对象，后续要监控的事件添加到其中
             epoll = select.epoll()
@@ -74,8 +73,9 @@ class tcpserver:
                     # 可写事件
                     elif event & select.EPOLLOUT:
                         try:
-                            request = message_queues[socket_request].get_nowait()
-                            handle = requesthandle(request)
+                            data = message_queues[socket_request].get_nowait()
+                            Reques.request =data
+                            handle = requesthandle()
                             result = handle.handle()
                             socket_request.send(result.encode('utf-8'))
                             self.log.info('返回 ——》%s'%result)

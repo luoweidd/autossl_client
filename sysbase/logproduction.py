@@ -14,18 +14,18 @@
 '''
 
 import logging,os,datetime
+from logging import handlers
 from sysbase.confparser import configparser
 from sysbase.basetools import systemtools
-from logging import handlers
-
 class Logbase:
 
     config_obj = configparser()
     config_set = config_obj.confparser()
     sys_toosl = systemtools()
-    logfile = config_set["log"]["path"]
+    logfile = config_set["log"]["PATH"]
     logfilename = sys_toosl.dirflagformat(logfile)
-
+    backup_Count = config_set["log"]["backup_Count"]
+    max_cut = config_set["log"]["max_cut"]
     if not os.path.exists('logs'):
         os.makedirs("logs",mode=0o777)
     else:
@@ -35,16 +35,16 @@ class Logbase:
 
     logger = logging.getLogger("lw-ghy-acme")
     logger.setLevel('DEBUG')
-    BASIC_FORMAT = "%(asctime)-15s [%(pathname)s.%(module)s.%(funcName)s] %(lineno)d %(levelname)s -- %(message)s"
-    DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+    BASIC_FORMAT = config_set["log"]["FORMAT"]
+    DATE_FORMAT = config_set["log"]["ASCTIME_FORMAT"]
     formatter = logging.Formatter(BASIC_FORMAT, DATE_FORMAT)
     chlr = logging.StreamHandler()  # 输出到控制台的handler
     chlr.setFormatter(formatter)
     # chlr.setLevel('INFO')  # 也可以不设置，不设置就默认用logger的level
     fhlr = logging.FileHandler(logfilename)# 输出到文件的handler
     fhlr.setFormatter(formatter)#日子格式handler
-    sizecut = logging.handlers.RotatingFileHandler(filename=logfilename,mode=0o777,maxBytes=10240*5,backupCount=7)
-    datacut = logging.handlers.TimedRotatingFileHandler(filename=logfilename, when='midnight', interval=1, backupCount=7, atTime=datetime.time(0, 0, 0, 0))
+    sizecut = logging.handlers.RotatingFileHandler(filename=logfilename,mode=0o777,maxBytes=10240*max_cut,backupCount=backup_Count)
+    datacut = logging.handlers.TimedRotatingFileHandler(filename=logfilename, when='D', interval=1, backupCount=backup_Count, atTime=datetime.time(0, 0, 0, 0))
     logger.addHandler(chlr)
     logger.addHandler(fhlr)
     logger.addHandler(sizecut)

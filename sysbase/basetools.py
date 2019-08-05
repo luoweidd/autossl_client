@@ -14,20 +14,36 @@
 '''
 
 import os,platform,subprocess,re
+# from sysbase.logproduction import Logbase
 
+
+# log = Logbase.logger
 
 class timeformat:
     pass
 
 class systemtools:
 
+
     def basepath(self):
+        '''
+        获取当前路径
+        :return:
+        '''
         return os.getcwd()
 
     def os_type(self):
+        '''
+        系统内省判断
+        :return:
+        '''
         return platform.system()
 
     def osdircutflag(self):
+        '''
+        系统目录路径分隔符
+        :return:
+        '''
         ostype = self.os_type()
         if ostype == 'Windows':
             return '\\'
@@ -35,6 +51,11 @@ class systemtools:
             return '/'
 
     def dirflagformat(self,path):
+        '''
+        传入路径根据系统类型重新组合
+        :param path:
+        :return:
+        '''
         if self.os_type() == "Windows":
             if re.match('^[C-Z,c-z]:\\\*',path):
                 return path
@@ -59,5 +80,84 @@ class systemtools:
                 return configabsolutepath
 
     def CMD(self,command, check_name=None):
+        '''
+        系统命令组装
+        :param command:
+        :param check_name:
+        :return:
+        '''
         checkresult = subprocess.getstatusoutput('%s %s' % (command, check_name))
         return checkresult
+
+    def readtxtfile(self,configabsolutepath):
+        '''
+        只读文件模式
+        :param configabsolutepath:
+        :return:
+        '''
+        try:
+            with open(configabsolutepath,'r')as f:
+                data = f.read()
+                return data
+        except Exception as e:
+            self.logoutput()
+
+    def logoutput(self,error):
+        '''
+        日志输出
+        :param error:
+        :return:
+        '''
+        if error is object:
+            for i in error:
+                print(i)
+        else:
+            print(error)
+
+    def get_dir_list(self,path):
+        '''
+        目录内内容名称列表
+        :param path:
+        :return:
+        '''
+        return os.listdir(path)
+
+    def dir_path_check(self,dir):
+        '''
+        目录是否纯在检测，如果不存在则新建。
+        :param dir:
+        :return:
+        '''
+        if os.path.exists(dir):
+            return True
+        else:
+            flag = self.osdircutflag()
+            dir_list = dir.split(flag)
+            path_tmp = ''
+            for i in dir_list:
+                if self.os_type() != 'Windows':
+                    path_tmp += flag+i
+                    if os.path.exists(path_tmp) is False:
+                        os.mkdir(path_tmp,0o664)
+                        print('创建目录：%s' % path_tmp)
+                        return True
+                else:
+                    path_tmp += i+flag
+                    if os.path.exists(path_tmp) is False:
+                        os.mkdir(path_tmp,0o755)
+                        print('创建目录：%s'%path_tmp)
+                        return True
+
+    def new_write_file(self,absolutepath,data):
+        '''
+        新写入文件，覆盖原有内容
+        :param absolutepath:
+        :param data:
+        :return:
+        '''
+        try:
+            with open(absolutepath,'w')as f:
+                f.write(data)
+                return True
+        except Exception as  e:
+            self.logoutput(e)
