@@ -124,3 +124,5 @@
 # bdata =  bytes(json.dumps(data).encode('utf-8'))
 # print(len(bdata))
 
+b = '1234fkaspfasdmf;asfkosd'
+print(int(b[:4]))

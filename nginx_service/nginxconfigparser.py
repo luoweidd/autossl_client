@@ -20,6 +20,9 @@ from sysbase.basetools import systemtools
 
 class nginxconfig:
 
+    SEAL_PROOF_BACK_END = "http://127.0.0.1:8090"
+
+
     def __init__(self):
         _configparsers = configparser()
         _nginx_conf = _configparsers.confparser()
@@ -143,7 +146,7 @@ class nginxconfig:
             self.log.error( 'Wirte error,error info:%s' % e)
             return None
 
-    def add_Anti_seal_conf(self,domain,pem,key,proxy_pass):
+    def add_Anti_seal_conf(self,domain,pem,key,proxy_pass=None):
         '''
         Add the nginx service configuration of the anti-blocking site.
         :param domain:
@@ -151,6 +154,8 @@ class nginxconfig:
         :param key:
         :return:
         '''
+        if proxy_pass == None:
+            proxy_pass = self.SEAL_PROOF_BACK_END
         config_info = '''server
     {
             listen 80;
@@ -180,4 +185,4 @@ class nginxconfig:
         access_log /var/log/nginx/%s_access.log;
     }
             '''%(domain,domain,pem,key,domain,proxy_pass)
-        return config_info,domain
+        return config_info

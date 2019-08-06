@@ -15,6 +15,7 @@
 
 from sysbase.confparser import configparser
 from sysbase.logproduction import Logbase
+from sysbase.basetools import systemtools
 import socket,threading,os,select,queue
 from tcpservice.requesthandle import requesthandle,Reques
 
@@ -25,16 +26,21 @@ class tcpserver:
         _listen_set = _config_set.confparser()
         self.host = _listen_set["lisent"]["host"]
         self.prot = _listen_set["lisent"]["port"]
+        self.log = Logbase.logger
         self.service = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.service.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        self.backlog = _listen_set["lisent"]["maxconnect"]
         self.service.bind((self.host,self.prot))
+        self.backlog = _listen_set["lisent"]["maxconnect"]
         self.buffer_size = _listen_set["lisent"]["buffer_size"]
-        self.log = Logbase.logger
-        self.log.info("Service startup!")
         self.service.listen(self.backlog)
+        self.log.info("Service startup!")
+        self.log.info("lisent port: %s:%s"%(self.host,self.prot))
+        self.log.info("maxbuffer: %d"%self.buffer_size)
+        self.log.info("maxconnect: %d"%self.backlog)
+        self.logout = systemtools()
 
         if hasattr(select,'epoll'):
+
             # 新建epoll事件对象，后续要监控的事件添加到其中
             epoll = select.epoll()
             # 添加服务器监听fd到等待读事件集合
@@ -53,23 +59,43 @@ class tcpserver:
                         # 如果活动socket为服务器所监听，有新连接
                         if socket_request == self.service:
                             con, address = self.service.accept()
-                            con.setblocking(0)
+                            con.setblocking(False)
                             # 注册新连接fd到待读事件集合
                             epoll.register(con.fileno(), select.EPOLLIN)
                             fd_to_socket[con.fileno()] = con
                             message_queues[con] = queue.Queue()
-                            self.log.info(message_queues)
+                            self.log.info("%s:%s —— 已连接"%(address[0],address[1]))
                         # 否则为客户端发送的数据
                         else:
-                            data = socket_request.recv(self.buffer_size)
-                            if data == '':
-                                self.log.error('消息空，强制关闭链接！')
-                                epoll.unregister(con)
-                                fd_to_socket[con.fileno()].close()
-                            else:
-                                message_queues[socket_request].put(data)
-                                # 修改读取到消息的连接到等待写事件集合
-                                epoll.modify(fd, select.EPOLLOUT)
+                            try:
+                                data = socket_request.recv(self.buffer_size)
+                                if data == b'':
+                                    epoll.unregister(fd)
+                                    fd_to_socket[fd].close()
+                                    self.log.error('消息空，强制关闭链接！,或客户端断开链接！')
+                                else:
+                                    data = data.decode("utf-8")
+                                    data_szie = int(data[:4])
+                                    if data_szie > self.buffer_size:
+                                        print(data[4::])
+                                        pack_num = data_szie / self.buffer_size
+                                        full_data = ''
+                                        for i in range(1,round(pack_num)):
+                                            full_data += data
+                                        break
+                                        reques_data = full_data[4::]
+                                        message_queues[socket_request].put(reques_data)
+                                        epoll.modify(fd,select.EPOLLOUT)
+                                    else:
+                                        message_queues[socket_request].put(data)
+                                        # 修改读取到消息的连接到等待写事件集合
+                                        epoll.modify(fd, select.EPOLLOUT)
+                            except Exception as e:
+                                print(e)
+                                message_queues[con].empty()
+                                epoll.modify(fd,select.EPOLLHUP)
+                                self.log.debug("%s:%s —— 链接已断开"%(address[0],address[1]))
+
                     # 可写事件
                     elif event & select.EPOLLOUT:
                         try:
@@ -81,14 +107,17 @@ class tcpserver:
                             self.log.info('返回 ——》%s'%result)
                         except queue.Empty as e:
                             epoll.modify(fd, select.EPOLLIN)
+                        except Exception as e:
+                            epoll.modify(fd,select.EPOLLHUP)
+                            self.log.error(e)
                     # 关闭事件
                     elif event & select.EPOLLHUP:
                         epoll.unregister(fd)
                         fd_to_socket[fd].close()
                         del fd_to_socket[fd]
         elif hasattr(select,'select'):
-            inputs = [self.service, ]
             while True:
+                inputs = [self.service, ]
                 rlist, wlist, xlist = select.select(inputs, [], [])
                 for socket_request in rlist:
                     if socket_request == self.service:

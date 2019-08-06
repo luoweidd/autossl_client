@@ -13,11 +13,11 @@
  * Time: 下午5:32
 '''
 
-import os,platform,subprocess,re
+import os,platform,subprocess,re,logging
 # from sysbase.logproduction import Logbase
 
 
-# log = Logbase.logger
+logger = logging.getLogger("lw-ghy-acme")
 
 class timeformat:
     pass
@@ -110,9 +110,9 @@ class systemtools:
         '''
         if error is object:
             for i in error:
-                print(i)
+                logger.error(i)
         else:
-            print(error)
+            logger.error(error)
 
     def get_dir_list(self,path):
         '''

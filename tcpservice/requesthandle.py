@@ -62,7 +62,7 @@ class requesthandle():
             else:
                 return "{'error':'非法消息'}"
         except Exception as e :
-            self.sysbase.logoutput(e)
+            # self.log.error(e)
             return "{'error':'非法消息'}"
 
 

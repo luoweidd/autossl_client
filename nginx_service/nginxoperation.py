@@ -12,3 +12,6 @@
  * Date: 2019/7/25
  * Time: 下午5:34
 '''
+
+class nginxperation:
+    pass

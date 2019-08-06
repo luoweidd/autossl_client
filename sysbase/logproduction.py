@@ -43,8 +43,8 @@ class Logbase:
     # chlr.setLevel('INFO')  # 也可以不设置，不设置就默认用logger的level
     fhlr = logging.FileHandler(logfilename)# 输出到文件的handler
     fhlr.setFormatter(formatter)#日子格式handler
-    sizecut = logging.handlers.RotatingFileHandler(filename=logfilename,mode=0o777,maxBytes=10240*max_cut,backupCount=backup_Count)
-    datacut = logging.handlers.TimedRotatingFileHandler(filename=logfilename, when='D', interval=1, backupCount=backup_Count, atTime=datetime.time(0, 0, 0, 0))
+    sizecut = logging.handlers.RotatingFileHandler(filename=logfilename,mode=0o777,maxBytes=10485760*max_cut,backupCount=backup_Count)
+    datacut = logging.handlers.TimedRotatingFileHandler(filename=logfilename, when='MIDNIGHT', interval=1, backupCount=backup_Count, atTime=datetime.time(0, 0, 0, 0))
     logger.addHandler(chlr)
     logger.addHandler(fhlr)
     logger.addHandler(sizecut)
