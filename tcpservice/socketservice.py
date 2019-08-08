@@ -21,6 +21,14 @@ from tcpservice.requesthandle import requesthandle,Reques
 
 class tcpserver:
 
+    __doc__ = '''
+        协议：
+            前20个字节为消息长度，其消息长度值不足以20字节用‘\x00’填充满20字节（必须转为ASSIC碼字符进制）。
+                例子： 消息长度：1500 字节
+                      实际需要发送: b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x05\xdc'
+            作为客户端可以不用考虑粘包问题，可以与消息拼接一起发送，但前提是必须拼接在消息的前面。
+    '''
+
     def __init__(self):
         _config_set = configparser()
         _listen_set = _config_set.confparser()
