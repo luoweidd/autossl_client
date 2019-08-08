@@ -31,11 +31,9 @@ class tcpserver:
         self.service.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
         self.service.bind((self.host,self.prot))
         self.backlog = _listen_set["lisent"]["maxconnect"]
-        self.buffer_size = _listen_set["lisent"]["buffer_size"]
         self.service.listen(self.backlog)
         self.log.info("Service startup!")
         self.log.info("lisent port: %s:%s"%(self.host,self.prot))
-        self.log.info("maxbuffer: %d"%self.buffer_size)
         self.log.info("maxconnect: %d"%self.backlog)
         self.logout = systemtools()
 
@@ -68,30 +66,29 @@ class tcpserver:
                         # 否则为客户端发送的数据
                         else:
                             try:
-                                data = socket_request.recv(self.buffer_size)
-                                if data == b'':
+                                heard = socket_request.recv(20)
+                                # self.log.info(heard)
+                                if heard == b'':
                                     epoll.unregister(fd)
                                     fd_to_socket[fd].close()
                                     self.log.error('消息空，强制关闭链接！,或客户端断开链接！')
                                 else:
-                                    data = data.decode("utf-8")
-                                    data_szie = int(data[:4])
-                                    if data_szie > self.buffer_size:
-                                        print(data[4::])
-                                        pack_num = data_szie / self.buffer_size
-                                        full_data = ''
-                                        for i in range(1,round(pack_num)):
-                                            full_data += data
-                                        break
-                                        reques_data = full_data[4::]
-                                        message_queues[socket_request].put(reques_data)
-                                        epoll.modify(fd,select.EPOLLOUT)
-                                    else:
-                                        message_queues[socket_request].put(data)
-                                        # 修改读取到消息的连接到等待写事件集合
-                                        epoll.modify(fd, select.EPOLLOUT)
+                                    data_size = int(heard.hex(),16)
+                                    recv_size = 0
+                                    full_data = b''
+                                    while recv_size < data_size:
+                                        data = socket_request.recv(1024)
+                                        full_data += data
+                                        recv_size += len(data)
+                                    # full_data = full_data[20::]
+                                    message_queues[socket_request].put(full_data)
+                                    epoll.modify(fd,select.EPOLLOUT)
                             except Exception as e:
-                                print(e)
+                                if e is object:
+                                    for i in e:
+                                        self.log.error(i)
+                                    else:
+                                        self.log.error(e)
                                 message_queues[con].empty()
                                 epoll.modify(fd,select.EPOLLHUP)
                                 self.log.debug("%s:%s —— 链接已断开"%(address[0],address[1]))
@@ -104,12 +101,14 @@ class tcpserver:
                             handle = requesthandle()
                             result = handle.handle()
                             socket_request.send(result.encode('utf-8'))
-                            self.log.info('返回 ——》%s'%result)
+                            self.log.info('返回 ——》%s'%(result))
                         except queue.Empty as e:
-                            epoll.modify(fd, select.EPOLLIN)
+                            epoll.modify(fd,select.EPOLLIN)
+                            #队列内无消息，重回新连接等待中
                         except Exception as e:
                             epoll.modify(fd,select.EPOLLHUP)
                             self.log.error(e)
+                            self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
                     # 关闭事件
                     elif event & select.EPOLLHUP:
                         epoll.unregister(fd)
@@ -124,9 +123,32 @@ class tcpserver:
                         con, address = self.service.accept()
                         inputs.append(con)
                     else:
-                        data = socket_request.recv(self.buffer_size)
-                        if data:
-                            socket_request.send(data)
+                        try:
+                            heard = socket_request.recv(20)
+                            self.log.info(heard)
+                            if heard == b'':
+                                inputs.remove(socket_request)
+                                socket_request.close()
+                                self.log.error('消息空，强制关闭链接！,或客户端断开链接！')
+                            else:
+                                data_size = int(heard.hex(), 16)
+                                recv_size = 0
+                                full_data = b''
+                                while recv_size < data_size:
+                                    data = socket_request.recv(1024)
+                                    full_data += data
+                                    recv_size += len(data)
+                                # full_data = full_data[20::]
+                                socket_request.send(full_data)
+                        except Exception as e:
+                            if e is object:
+                                for i in e:
+                                    self.log.error(i)
+                                else:
+                                    self.log.error(e)
                             inputs.remove(socket_request)
                             socket_request.close()
+                            self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
+
+
 

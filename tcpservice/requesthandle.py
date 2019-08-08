@@ -51,7 +51,6 @@ class requesthandle():
         try:
             self.log.info(Reques.request)
             data = json.loads(Reques.request)
-            self.log.info(type(data))
             if type(data) is dict:
                 heard = data["heard"]
                 if heard not in self.heards:

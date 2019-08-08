@@ -16,11 +16,14 @@
 class heartbeats:
 
     def heartbeat_check(self,data):
-        msg = data["msg"]
-        if msg != None and msg != '':
-            if msg["check"] == "On-line":
-                return {"heard":"heartbeat","msg":{"check":"On"}}
+        try:
+            msg = data["msg"]
+            if msg != None and msg != '':
+                if msg["check"] == "On-line":
+                    return {"msg":{"check":"On"}}
+                else:
+                    return {"error":"无法识别的消息"}
             else:
-                return {"error":"消息异常"}
-        else:
-            return {"error":"服务服务异常"}
+                return {"error":"消息内容为空"}
+        except Exception:
+            return {"error": "无法识别的消息"}
