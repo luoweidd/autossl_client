@@ -28,6 +28,7 @@ class nginxconfig:
         _nginx_conf = _configparsers.confparser()
         self.nginx_config_path = _nginx_conf["nginx"]["nginxpath"]
         self.nginx_certificate = _nginx_conf["nginx"]["certificate_catalogue"]
+        self.sysbase.dir_path_check(self.nginx_certificate)
         self.log = Logbase.logger
         self.sysbase = systemtools()
 
@@ -38,11 +39,45 @@ class nginxconfig:
             lists += pathlist
         return lists
 
-    def certificate_dir_chcek(self):
-       return self.sysbase.dir_path_check(self.nginx_certificate)
+    def domian_find_nignx_conf(self,old_domian):
+        file_path_list = self.getnginxfilepathlist()
+        for i in file_path_list:
+            file_txt = systemtools.readtxtfile(self.nginx_config_path+self.sysbase.osdircutflag()+i)
+            if file_txt != 'error':
+                file_txt_r_n_c = self.remove_notes_comments(file_txt)
+                file_dict = self.nginxconfiganalysis(file_txt_r_n_c)
+                if file_dict["server_1"][3]["servername"] == old_domian and file_dict["server_2"][3]["servername"] == old_domian:
+                    abspath = self.nginx_config_path+self.sysbase.osdircutflag()+i
+                    return file_dict,abspath
 
-    def certificate_write(self,filename,certificate):
-        return self.sysbase.new_write_file(self.nginx_certificate+self.sysbase.osdircutflag()+filename,certificate)
+        else:
+            return 'error: Not matched'
+
+    def proxy_pass_find_nignx_conf(self,proxy_pass):
+        file_path_list = self.getnginxfilepathlist()
+        for i in file_path_list:
+            file_txt = systemtools.readtxtfile(self.nginx_config_path + self.sysbase.osdircutflag() + i)
+            if file_txt != 'error':
+                file_txt_r_n_c = self.remove_notes_comments(file_txt)
+                file_dict = self.nginxconfiganalysis(file_txt_r_n_c)
+                if file_dict["server_2"][18]["proxy_pass"] == proxy_pass:
+                    abspath = self.nginx_config_path + self.sysbase.osdircutflag() + i
+                    return file_dict, abspath
+        else:
+            return 'error: Not matched'
+
+    def certificate_write(self,dirname,filename,certificate):
+        try:
+            file_path = self.nginx_certificate+self.sysbase.osdircutflag()+dirname+self.sysbase.osdircutflag()+filename
+            self.sysbase.dir_path_check(file_path)
+            self.sysbase.new_write_file(file_path,certificate)
+            return file_path
+        except Exception as e:
+            if e is object:
+                for i in e:
+                    self.log.error(i)
+            else:
+                self.log.error(e)
 
     def getconfigtxt(self,file_path):
         return self.sysbase.readtxtfile(file_path)
@@ -117,7 +152,11 @@ class nginxconfig:
                 conf.update({j: server})
             return conf
         except Exception as e:
-            self.log.error( 'Conversion error，error info：%s'%e.__context__)
+            if e is object:
+                for i in e:
+                    self.log.error(i)
+            else:
+                self.log.error( 'Conversion error，error info：%s'%e)
             return None
 
     def nginx_config_write_buffer_fomat(self, config_object_data):
@@ -180,7 +219,7 @@ class nginxconfig:
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
-            %s;
+            proxy_pass %s;
                 }
         access_log /var/log/nginx/%s_access.log;
     }

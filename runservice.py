@@ -21,12 +21,19 @@ import json
 
 req = requesthandle()
 
-@req.route('nginx_ssl')
+@req.route('nginx_ssl_update')
 def root():
     data = Reques.request
-    data = json.loads(data)
-    # ngop = nginxperation()
-    return data["msg"]["domain"]
+    ngop = nginxperation()
+    res = ngop.nignx_ssl_update(json.loads(data))
+    return json.dumps(res)
+
+@req.route('new_nginx_conf')
+def new_nginx_conf():
+    data = Reques.request
+    ngop = nginxperation()
+    res = ngop.nignx_ssl_new(json.loads(data))
+    return json.dumps(res)
 
 @req.route('good')
 def good():

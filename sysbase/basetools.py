@@ -100,7 +100,8 @@ class systemtools:
                 data = f.read()
                 return data
         except Exception as e:
-            self.logoutput()
+            self.osdircutflag(e)
+            return 'error'
 
     def logoutput(self,error):
         '''
@@ -161,3 +162,4 @@ class systemtools:
                 return True
         except Exception as  e:
             self.logoutput(e)
+            return False
