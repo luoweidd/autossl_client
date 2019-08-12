@@ -25,21 +25,21 @@ req = requesthandle()
 def root():
     data = Reques.request
     ngop = nginxperation()
-    res = ngop.nignx_ssl_update(json.loads(data))
+    res = ngop.nignx_ssl_update(json.loads(data)["msg"])
     return json.dumps(res)
 
 @req.route('new_nginx_conf')
 def new_nginx_conf():
     data = Reques.request
     ngop = nginxperation()
-    res = ngop.nignx_ssl_new(json.loads(data))
+    res = ngop.nignx_ssl_new(json.loads(data)["msg"])
     return json.dumps(res)
 
 @req.route('good')
 def good():
     data = Reques.request
-    data = json.loads(data)
-    return json.dumps(data["msg"])
+    data = json.loads(data)["msg"]
+    return json.dumps(data)
 
 @req.route('heartbeat')
 def heartbeat():

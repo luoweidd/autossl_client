@@ -16,6 +16,7 @@
 from sysbase.logproduction import Logbase
 from nginx_service.nginxconfigparser import nginxconfig
 from sysbase.basetools import systemtools
+import re
 
 class nginxperation:
 
@@ -51,19 +52,11 @@ class nginxperation:
 
     def update_conf(self,data):
         try:
-            ca_key_path = self.nginxopt.certificate_write(data["domain"],'certificate.pem',data["ca_key"])
-            privte_key_path = self.nginxopt.certificate_write(data["domain"],'privte.key',data["privte_key"])
+            ca_key_path = self.nginxopt.downlaodcert(data["domain"],data["ca_key_down_link"],'certificate.pem')
+            privte_key_path = self.nginxopt.downlaodcert(data["domain"],data["privte_key_down_link"],'privte.key')
             ningx_conf_obj = self.nginxopt.domian_find_nignx_conf(data["old_domain"])
             if ningx_conf_obj != 'error: Not matched':
-                ningx_conf_obj['server_2'][5]["ssl_certificate"] = '%s;' % ca_key_path
-                ningx_conf_obj['server_2'][6]["ssl_certificate_key"] = '%s;' % privte_key_path
-                ningx_conf_obj['server_1'][3]["server_name"] = '*%s;' % data["domian"]
-                ningx_conf_obj["server_2"][3]['server_name'] = '*%s;' % data["domian"]
-                new_conf = self.nginxopt.nginx_config_write_buffer_fomat(ningx_conf_obj)
-                write_status = self.basesys.new_write_file(ningx_conf_obj[1],new_conf)
-                if write_status is not False:
-                    self.log.info("Configuration Rewrite Successful")
-                    return True
+                self.Domain_Differentiation(data, ningx_conf_obj, ca_key_path, privte_key_path)
             else:
                 new_conf = self.nginxopt.add_Anti_seal_conf(data["domain"],ca_key_path,privte_key_path)
                 file_path = self.nginxopt.nginx_config_path
@@ -81,10 +74,48 @@ class nginxperation:
                 self.log.error(e)
             return "Writing data error"
 
+    def Domain_Differentiation(self,data,dict_nginx_conf,new_pem,new_key):
+        if re.match('^\.', data["old_domain"]):
+            if dict_nginx_conf != 'error: Not matched' and re.match('\*\.%s;' % data["old_domain"],
+            dict_nginx_conf['server_1'][3]["server_name"]) and re.match('\*\.%s;' % data["old_domain"][1::],
+            dict_nginx_conf["server_2"][3]['server_name']):
+                dict_nginx_conf['server_2'][5]["ssl_certificate"] = '%s;' % new_pem
+                dict_nginx_conf['server_2'][6]["ssl_certificate_key"] = '%s;' % new_key
+                dict_nginx_conf['server_1'][3]["server_name"] = '*%s;' % data["domian"]
+                dict_nginx_conf["server_2"][3]['server_name'] = '*%s;' % data["domian"]
+                wirte_res = self.wirteconf(dict_nginx_conf)
+                return wirte_res
+        else:
+            if dict_nginx_conf != None and re.match('%s;' % data["old_domain"],
+               dict_nginx_conf['server_1'][3]["server_name"]) and re.match(
+               '%s;' % data["old_domain"], dict_nginx_conf["server_2"][3]['server_name']):
+                dict_nginx_conf['server_2'][5]["ssl_certificate"] = '%s;' % new_pem
+                dict_nginx_conf['server_2'][6]["ssl_certificate_key"] = '%s;' % new_key
+                dict_nginx_conf['server_1'][3]["server_name"] = '%s;' % data["domian"]
+                dict_nginx_conf["server_2"][3]['server_name'] = '%s;' % data["domian"]
+                wirte_res = self.wirteconf(dict_nginx_conf)
+                return wirte_res
+
+    def wirteconf(self,dict_nginx_conf):
+        new_conf_data = self.nginxopt.nginx_config_write_buffer_fomat(dict_nginx_conf)
+        update_res = self.basesys.new_write_file(dict_nginx_conf[1], new_conf_data)
+        self.log.error(update_res)
+        if update_res == 'ok':
+            nginx_config_status = self.nginxopt.nginx_conf_check()
+            self.log.error(nginx_config_status)
+            if nginx_config_status[0] == 0:
+                nginx_server_status = self.nginxopt.restart_nginx_to_effective()
+                self.log.info(nginx_server_status)
+                return nginx_server_status
+            self.log.info('配置检查不通过，请通知管理员检查配置文件，以及系统。错误信息：%s' % nginx_config_status[1])
+            return '配置检查不通过，请通知管理员检查配置文件，以及系统。'
+        return '更新配置文件错误。'
+
+
     def new_confg(self,data):
         try:
-            ca_key_path = self.nginxopt.certificate_write(data["domain"],'certificate.pem',data["ca_key"])
-            privte_key_path = self.nginxopt.certificate_write(data["domain"],'privte.key',data["privte_key"])
+            ca_key_path = self.basesys.downlaodcert(data["domain"],data["ca_key_down_link"],'certificate.pem')
+            privte_key_path = self.basesys.downlaodcert(data["domain"],data["privte_key_down_link"],'privte.key')
             new_conf = self.nginxopt.add_Anti_seal_conf(data["domain"], ca_key_path, privte_key_path)
             file_path = self.nginxopt.nginx_config_path
             if file_path is tuple:

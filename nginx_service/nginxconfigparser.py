@@ -16,6 +16,8 @@
 from sysbase.confparser import configparser
 from sysbase.logproduction import Logbase
 from sysbase.basetools import systemtools
+from urllib.request import urlretrieve
+
 
 
 class nginxconfig:
@@ -27,10 +29,10 @@ class nginxconfig:
         _configparsers = configparser()
         _nginx_conf = _configparsers.confparser()
         self.nginx_config_path = _nginx_conf["nginx"]["nginxpath"]
+        self.sysbase = systemtools()
         self.nginx_certificate = _nginx_conf["nginx"]["certificate_catalogue"]
         self.sysbase.dir_path_check(self.nginx_certificate)
         self.log = Logbase.logger
-        self.sysbase = systemtools()
 
     def getnginxfilepathlist(self):
         lists = []
@@ -65,6 +67,18 @@ class nginxconfig:
                     return file_dict, abspath
         else:
             return 'error: Not matched'
+
+    def downlaodcert(self,dirname,filename,down_url):
+        try:
+            file_path = self.nginx_certificate+self.sysbase.osdircutflag()+dirname+self.sysbase.osdircutflag()+filename
+            urlretrieve(down_url,file_path)
+            return file_path
+        except Exception as e:
+            if e is object:
+                for i in e:
+                    print(i)
+            else:
+                print(e)
 
     def certificate_write(self,dirname,filename,certificate):
         try:

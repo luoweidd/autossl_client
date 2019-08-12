@@ -148,3 +148,14 @@
 # print(int(la,16))
 # print((ls+str)[20::])
 #
+#ll = '/home/devops/data/operation/trunk'
+#print(ll[1:])
+
+from urllib.request import urlretrieve
+
+url = 'http://127.0.0.1:5000/static/certificate/d54la.cn/certificate.pem'
+file_save_path = '/etc/nginx/certificate/d54la.cn/'
+filename = 'certificate.pem'
+down = urlretrieve(url,filename)
+for i in down:
+    print(i)

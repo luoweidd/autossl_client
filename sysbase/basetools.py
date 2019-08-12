@@ -14,6 +14,7 @@
 '''
 
 import os,platform,subprocess,re,logging
+from urllib import request
 # from sysbase.logproduction import Logbase
 
 
@@ -139,14 +140,14 @@ class systemtools:
                 if self.os_type() != 'Windows':
                     path_tmp += flag+i
                     if os.path.exists(path_tmp) is False:
-                        os.mkdir(path_tmp,0o664)
+                        os.mkdir(path_tmp[1:],0o664)
                         print('创建目录：%s' % path_tmp)
                         return True
                 else:
                     path_tmp += i+flag
                     if os.path.exists(path_tmp) is False:
                         os.mkdir(path_tmp,0o755)
-                        print('创建目录：%s'%path_tmp)
+                        print('创建目录：%s'%path_tmp[1:])
                         return True
 
     def new_write_file(self,absolutepath,data):
