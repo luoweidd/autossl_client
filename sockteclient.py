@@ -6,7 +6,7 @@
  * Description:  
  * Project : autossl_client
  * Ide tools : PyCharm
- * File name : test_1.py
+ * File name : sockteclient.py
  * Author <a href="mailto:3245554@qq.com">罗卫</a>
  * User: devops
  * Date: 2019/7/26
