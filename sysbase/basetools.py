@@ -62,11 +62,11 @@ class systemtools:
                 return path
             elif re.match('^\./',path):
                 path = re.sub('./','',path)
-                win_configpath = path.replace('/',self.osdircutflag)
+                win_configpath = path.replace('/',self.osdircutflag())
                 configabsolutepath = '%s%s%s'%(self.basepath(),self.osdircutflag(),win_configpath)
                 return configabsolutepath
             else:
-                win_configpath = path.replace('/',self.osdircutflag)
+                win_configpath = path.replace('/',self.osdircutflag())
                 configabsolutepath = '%s%s%s'%(self.basepath(),self.osdircutflag(),win_configpath)
                 return configabsolutepath
         else:

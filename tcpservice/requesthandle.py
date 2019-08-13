@@ -51,7 +51,7 @@ class requesthandle():
 
     def handle(self):
         try:
-            self.log.info(Reques.request)
+            self.log.debug('收到新消息：%s'%Reques.request)
             data = json.loads(Reques.request)
             if type(data) is dict:
                 heard = data["heard"]

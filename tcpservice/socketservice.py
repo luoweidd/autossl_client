@@ -46,7 +46,7 @@ class tcpserver:
         self.logout = systemtools()
 
         if hasattr(select,'epoll'):
-
+            self.log.info("epoll module")
             # 新建epoll事件对象，后续要监控的事件添加到其中
             epoll = select.epoll()
             # 添加服务器监听fd到等待读事件集合
@@ -123,21 +123,31 @@ class tcpserver:
                         fd_to_socket[fd].close()
                         del fd_to_socket[fd]
         elif hasattr(select,'select'):
-            while True:
-                inputs = [self.service, ]
-                rlist, wlist, xlist = select.select(inputs, [], [])
+            self.log.info("select module")
+            message_queues = {}
+            inputs = [self.service]
+            outputs =[]
+            ex_list = []
+            while inputs:
+                rlist, wlist, ex_list = select.select(inputs, outputs, ex_list)
                 for socket_request in rlist:
-                    if socket_request == self.service:
-                        con, address = self.service.accept()
+                    if socket_request is self.service:
+                        con, address = socket_request.accept()
+                        self.log.info('%s:%d 已连接'%(address[0],address[1]))
+                        socket_request.setblocking(0)
                         inputs.append(con)
+                        message_queues[con] = queue.Queue()
                     else:
                         try:
                             heard = socket_request.recv(20)
-                            self.log.info(heard)
                             if heard == b'':
+                                address = socket_request.getpeername()
+                                self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
+                                if socket_request in outputs:
+                                    outputs.remove(socket_request)
                                 inputs.remove(socket_request)
                                 socket_request.close()
-                                self.log.error('消息空，强制关闭链接！,或客户端断开链接！')
+                                del message_queues[socket_request]
                             else:
                                 data_size = int(heard.hex(), 16)
                                 recv_size = 0
@@ -146,8 +156,11 @@ class tcpserver:
                                     data = socket_request.recv(1024)
                                     full_data += data
                                     recv_size += len(data)
-                                # full_data = full_data[20::]
-                                socket_request.send(full_data)
+                                    Reques.request = data
+                                    handle = requesthandle()
+                                    result = handle.handle()
+                                    socket_request.send(result.encode('utf-8'))
+                                    self.log.info('返回 ——》%s' % (result))
                         except Exception as e:
                             if e is object:
                                 for i in e:
@@ -157,6 +170,45 @@ class tcpserver:
                             inputs.remove(socket_request)
                             socket_request.close()
                             self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
+
+                for socket_request in wlist:
+                    try:
+                        # 如果消息队列中有消息,从消息队列中获取要发送的消息
+                        message_queue = message_queues.get(socket_request)
+                        if message_queue is not None:
+                            data = message_queue.get_nowait()
+                            Reques.request =data
+                            handle = requesthandle()
+                            result = handle.handle()
+                            socket_request.send(result.encode('utf-8'))
+                            self.log.info('返回 ——》%s'%(result))
+                        else:
+                            # 客户端连接断开了
+                            address = socket_request.getpeername()
+                            self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
+                            if socket_request in outputs:
+                                outputs.remove(socket_request)
+                            inputs.remove(socket_request)
+                            socket_request.close()
+                            del message_queues[socket_request]
+                    except queue.Empty:
+                        # 客户端连接断开了
+                        address = socket_request.getpeername()
+                        self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
+                        outputs.remove(socket_request)
+                    except Exception as e:
+                        outputs.remove(socket_request)
+                        self.log.error(e)
+                        self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
+
+                for socket_request in ex_list:
+                    self.log.info('exception condition on:%s'%socket_request.getpeername())
+                    inputs.remove(socket_request)
+                    if socket_request in outputs:
+                        outputs.remove(socket_request)
+                        socket_request.close()
+                    del message_queues[socket_request]
+
 
 
 
