@@ -183,7 +183,6 @@ class tcpserver:
                             socket_request.send(result.encode('utf-8'))
                             self.log.info('返回 ——》%s'%(result))
                         else:
-                            # 客户端连接断开了
                             address = socket_request.getpeername()
                             self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
                             if socket_request in outputs:
@@ -192,7 +191,6 @@ class tcpserver:
                             socket_request.close()
                             del message_queues[socket_request]
                     except queue.Empty:
-                        # 客户端连接断开了
                         address = socket_request.getpeername()
                         self.log.debug("%s:%s —— 链接已断开" % (address[0], address[1]))
                         outputs.remove(socket_request)
