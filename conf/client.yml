@@ -36,5 +36,5 @@ log:
 #  Nginxpath: nginx configuration directory
 #  Certificate catalogue: Certificate storage catalogue applied through this system
 nginx:
-  nginxpath: /etc/nginx/conf,/etc/nginx/sites-enabled
+  nginxpath: /etc/nginx/conf.d,/etc/nginx/sites-enabled
   certificate_catalogue: /etc/nginx/certificate

@@ -151,11 +151,21 @@
 #ll = '/home/devops/data/operation/trunk'
 #print(ll[1:])
 
-from urllib.request import urlretrieve
+# from urllib.request import urlretrieve
+#
+# url = 'http://127.0.0.1:5000/static/certificate/d54la.cn/certificate.pem'
+# file_save_path = '/etc/nginx/certificate/d54la.cn/'
+# filename = 'certificate.pem'
+# down = urlretrieve(url,filename)
+# for i in down:
+#     print(i)
 
-url = 'http://127.0.0.1:5000/static/certificate/d54la.cn/certificate.pem'
-file_save_path = '/etc/nginx/certificate/d54la.cn/'
-filename = 'certificate.pem'
-down = urlretrieve(url,filename)
-for i in down:
-    print(i)
+from nginx_service.nginxconfigparser import configparser
+# import uuid,time
+# print(uuid.uuid5(uuid.NAMESPACE_DNS,time.time().hex()))
+
+import re
+# if re.match('^.*.conf','asdfasdfa.conf'):
+#     print(True)
+# else:
+#     print(False)

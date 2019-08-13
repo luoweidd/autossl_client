@@ -60,8 +60,6 @@ class requesthandle():
                 else:
                     resutl = self.heards[heard]()
                     return resutl
-            else:
-                return "{'error':'非法消息'}"
         except Exception as e :
             # self.log.error(e)
             return "{'error':'非法消息'}"

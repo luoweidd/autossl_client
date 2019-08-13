@@ -17,6 +17,7 @@ from sysbase.confparser import configparser
 from sysbase.logproduction import Logbase
 from sysbase.basetools import systemtools
 from urllib.request import urlretrieve
+import re
 
 
 
@@ -36,41 +37,45 @@ class nginxconfig:
 
     def getnginxfilepathlist(self):
         lists = []
-        for i in self.nginx_config_path:
+        nginxcofig_path = self.nginx_config_path.split(',')
+        for i in nginxcofig_path:
+            self.log.info("this dir : %s"%i)
             pathlist = self.sysbase.get_dir_list(i)
-            lists += pathlist
+            for j in pathlist:
+                if re.match(r'^.*\.conf',j):
+                    lists.append('%s%s%s'%(i,self.sysbase.osdircutflag(),j))
         return lists
 
     def domian_find_nignx_conf(self,old_domian):
         file_path_list = self.getnginxfilepathlist()
         for i in file_path_list:
-            file_txt = systemtools.readtxtfile(self.nginx_config_path+self.sysbase.osdircutflag()+i)
+            file_txt = self.sysbase.readlinefile(i)
             if file_txt != 'error':
                 file_txt_r_n_c = self.remove_notes_comments(file_txt)
                 file_dict = self.nginxconfiganalysis(file_txt_r_n_c)
-                if file_dict["server_1"][3]["servername"] == old_domian and file_dict["server_2"][3]["servername"] == old_domian:
-                    abspath = self.nginx_config_path+self.sysbase.osdircutflag()+i
-                    return file_dict,abspath
-
+                if file_dict["server_1"][3]["server_name"] == '%s;'%old_domian and file_dict["server_2"][3]["server_name"] == '%s;'%old_domian:
+                    return [file_dict,i]
         else:
             return 'error: Not matched'
 
     def proxy_pass_find_nignx_conf(self,proxy_pass):
         file_path_list = self.getnginxfilepathlist()
         for i in file_path_list:
-            file_txt = systemtools.readtxtfile(self.nginx_config_path + self.sysbase.osdircutflag() + i)
+            file_txt = self.sysbase.readtxtfile(self.nginx_config_path + self.sysbase.osdircutflag() + i)
             if file_txt != 'error':
                 file_txt_r_n_c = self.remove_notes_comments(file_txt)
                 file_dict = self.nginxconfiganalysis(file_txt_r_n_c)
                 if file_dict["server_2"][18]["proxy_pass"] == proxy_pass:
-                    abspath = self.nginx_config_path + self.sysbase.osdircutflag() + i
-                    return file_dict, abspath
+                    return [file_dict, i]
         else:
             return 'error: Not matched'
 
     def downlaodcert(self,dirname,filename,down_url):
         try:
-            file_path = self.nginx_certificate+self.sysbase.osdircutflag()+dirname+self.sysbase.osdircutflag()+filename
+            dirname = self.sysbase.getDomain(dirname)
+            file_save_path = '%s%s%s%s'%(self.nginx_certificate,self.sysbase.osdircutflag(),dirname,self.sysbase.osdircutflag())
+            self.sysbase.dir_path_check(file_save_path)
+            file_path = '%s%s'%(file_save_path,filename)
             urlretrieve(down_url,file_path)
             return file_path
         except Exception as e:
@@ -207,7 +212,7 @@ class nginxconfig:
         :param key:
         :return:
         '''
-        if proxy_pass == None:
+        if proxy_pass is None:
             proxy_pass = self.SEAL_PROOF_BACK_END
         config_info = '''server
     {
@@ -237,5 +242,5 @@ class nginxconfig:
                 }
         access_log /var/log/nginx/%s_access.log;
     }
-            '''%(domain,domain,pem,key,domain,proxy_pass)
+            '''%(domain,domain,pem,key,proxy_pass,self.sysbase.getDomain(domain))
         return config_info
