@@ -153,7 +153,7 @@
 
 # from urllib.request import urlretrieve
 #
-# url = 'http://127.0.0.1:5000/static/certificate/d54la.cn/certificate.pem'
+# url = 'http://127.0.0.1:8782/static/certificate/d54la.cn/certificate.pem'
 # file_save_path = '/etc/nginx/certificate/d54la.cn/'
 # filename = 'certificate.pem'
 # down = urlretrieve(url,filename)
@@ -169,3 +169,40 @@ import re
 #     print(True)
 # else:
 #     print(False)
+
+# import json,time
+# from sockteclient import socketclient
+#
+# while True:
+#     time.sleep(10)
+#     nginxextension = socketclient()
+#     data = {"heard":"nginx_ssl_update","msg":{"old_domain":"*.d54la.cn","domain":"*.d54la.cn","ca_key_down_link":"http://127.0.0.1:5000/static/certificate/d54la.cn/certificate.pem","privte_key_down_link":"http://127.0.0.1:5000/static/certificate/d54la.cn/privte.key"}}
+#     try:
+#         send_status = nginxextension.data_send(json.dumps(data))
+#         if send_status is object:
+#             for i in send_status:
+#                 print(i)
+#         else:
+#             recv_res = nginxextension.recv()
+#             if recv_res == '服务连接断开':
+#                 re_send_status = nginxextension.data_send(json.dumps(data))
+#                 recv_res = nginxextension.recv()
+#     except Exception as e:
+#         nginxextension.client.close()
+#         if e is object:
+#             for i in e:
+#                 print(i)
+#         else:
+#             print(e)
+#     try:
+#         recv_res = json.loads(recv_res)
+#         if recv_res["msg"]:
+#             if recv_res["msg"][0] == 0:
+#                 print('ok')
+#             else:
+#                 print( '数据未做任何修改！但执行成功。')
+#         print(recv_res)
+#     except KeyError:
+#         print(recv_res["error"])
+#     except Exception as e:
+#         print(e)

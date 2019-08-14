@@ -16,7 +16,6 @@
 from sysbase.logproduction import Logbase
 from nginx_service.nginxconfigparser import nginxconfig
 from sysbase.basetools import systemtools
-import re,uuid
 
 class nginxperation:
 
@@ -40,8 +39,8 @@ class nginxperation:
                         self.log.info('reload nginx config status:%s' % str(i))
                 else:
                     self.log.info('reload nginx config status:%s' % str(nginx_server_status))
-                return nginx_server_status
-            return {"error":'配置检查不通过，请通知管理员检查配置文件，以及系统。'}
+                return {"msg":nginx_server_status}
+            return {"error":'Configuration check failed. Please inform the administrator to check the configuration file and the system.'}
         return {"error":update_status}
 
     def nignx_ssl_new(self,data):
@@ -60,8 +59,8 @@ class nginxperation:
                         self.log.info('reload nginx config status:%s' % str(i))
                 else:
                     self.log.info('reload nginx config status:%s' % str(nginx_server_status))
-                return nginx_server_status
-            return {"error":'配置检查不通过，请通知管理员检查配置文件，以及系统。'}
+                return {"msg":nginx_server_status}
+            return {"error":'Configuration check failed. Please inform the administrator to check the configuration file and the system.'}
         return {"error":update_status}
 
     def update_conf(self,data):
