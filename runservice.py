@@ -13,7 +13,44 @@
  * Time: 下午5:23
 '''
 
-from service.tcpservice import start_service
+from tcpservice.socketservice import tcpserver
+from tcpservice.requesthandle import requesthandle,Reques
+from nginx_service.heartbeat import heartbeats
+from nginx_service.nginxoperation import nginxperation
+import json
+
+req = requesthandle()
+
+@req.route('nginx_ssl_update')
+def root():
+    data = Reques.request
+    ngop = nginxperation()
+    res = ngop.nignx_ssl_update(json.loads(data)["msg"])
+    return json.dumps(res)
+
+@req.route('new_nginx_conf')
+def new_nginx_conf():
+    data = Reques.request
+    ngop = nginxperation()
+    res = ngop.nignx_ssl_new(json.loads(data)["msg"])
+    return json.dumps(res)
+
+@req.route('good')
+def good():
+    data = Reques.request
+    data = json.loads(data)["msg"]
+    return json.dumps(data)
+
+@req.route('heartbeat')
+def heartbeat():
+    data = Reques.request
+    data = json.loads(data)
+    hb = heartbeats()
+    result = hb.heartbeat_check(data)
+    return json.dumps(result)
 
 
-start_service()
+server = tcpserver()
+
+if __name__ == "__namin__":
+    server
