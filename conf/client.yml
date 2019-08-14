@@ -21,7 +21,7 @@ pid:
 #  max_cut: File Cutting Capacity.(Unit: MB)
 
 log:
-  PATH: logs/ssl_apply.log
+  PATH: logs/ssl_apply_clien.log
   LEVEL: DEBUG
   backup_Count: 100
   max_cut: 5
