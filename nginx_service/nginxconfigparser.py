@@ -72,7 +72,8 @@ class nginxconfig:
 
     def downlaodcert(self,dirname,filename,down_url):
         try:
-            dirname = self.sysbase.getDomain(dirname)
+            if re.match('^\*\.',dirname) or re.match('^\.',dirname):
+                dirname = self.sysbase.getDomain(dirname)
             file_save_path = '%s%s%s%s'%(self.nginx_certificate,self.sysbase.osdircutflag(),dirname,self.sysbase.osdircutflag())
             self.sysbase.dir_path_check(file_save_path)
             file_path = '%s%s'%(file_save_path,filename)
