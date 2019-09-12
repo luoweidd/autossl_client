@@ -213,18 +213,19 @@ class nginxconfig:
         :param key:
         :return:
         '''
+        top_level_domain = self.sysbase.getDomain(domain)
         if proxy_pass is None:
             proxy_pass = self.SEAL_PROOF_BACK_END
         config_info = '''server
     {
             listen 80;
-            server_name %s;
+            server_name *.%s;
             rewrite ^(.*)$ https://$host$1 permanent;
     }
     server
     {
         listen 443 ssl;
-        server_name %s;
+        server_name *.%s;
         ssl on;
         ssl_certificate   %s;
         ssl_certificate_key  %s;
@@ -243,5 +244,5 @@ class nginxconfig:
                 }
         access_log /var/log/nginx/%s_access.log;
     }
-            '''%(domain,domain,pem,key,proxy_pass,self.sysbase.getDomain(domain))
+            '''%(top_level_domain,top_level_domain,pem,key,proxy_pass,top_level_domain)
         return config_info
