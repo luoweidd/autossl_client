@@ -129,7 +129,11 @@ class nginxperation:
         Execute the system shell command and restart the nginx service.
         :return:
         '''
-        command = 'systemctl restart '
-        server_name = 'nginx'
-        cmd = self.basesys.CMD(command,server_name)
+        # Restarting nginx results in loss of backend connection for nginx agents.
+        # 重启nginx导致nginx代理到后端连接丢失。
+        #command = 'systemctl restart '
+        #server_name = 'nginx'
+        command = 'nginx -s '
+        options = 'reload'
+        cmd = self.basesys.CMD(command,options)
         return cmd
