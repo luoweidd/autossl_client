@@ -226,7 +226,6 @@ class nginxconfig:
     {
         listen 443 ssl;
         server_name *.%s;
-        ssl on;
         ssl_certificate   %s;
         ssl_certificate_key  %s;
         ssl_session_timeout 5m;
